@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Flip 7</title>
+<meta name="description" content="Segnapunti per Flip 7">
+<meta name="theme-color" content="#eef3f1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1d1b" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Flip 7">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap">
+<style>
+html{color-scheme:light;-webkit-text-size-adjust:100%}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;-webkit-tap-highlight-color:transparent}
+img{max-width:100%}[hidden]{display:none!important}
+</style>
+<style>
+/* Layout: una colonna stretta da tavolo da gioco; il punteggio è una "carta" grande, la soglia una barra verso 200 */
+:root{
+  --bg:#eef3f1; --surface:#ffffff; --ink:#14302b; --muted:#5d7570; --line:#d3dfdb;
+  --accent:#e2491f; --accent-ink:#ffffff; --gold:#f3b51b; --teal:#0f7c6c; --bust:#a8b8b4;
+  --display:"Bungee","Arial Black",Impact,sans-serif;
+  --body:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1d1b; --surface:#172a27; --ink:#e6efec; --muted:#93aaa4; --line:#2a423e;
+  --accent:#ff6a3d; --accent-ink:#1a0d08; --gold:#f7c544; --teal:#3cc2ab; --bust:#4a5f5b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1d1b; --surface:#172a27; --ink:#e6efec; --muted:#93aaa4; --line:#2a423e;
+  --accent:#ff6a3d; --accent-ink:#1a0d08; --gold:#f7c544; --teal:#3cc2ab; --bust:#4a5f5b; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:620px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(2rem,9vw,2.8rem);line-height:.95;margin:0;letter-spacing:.01em}
+h1 .seven{color:var(--accent);display:inline-block;transform:rotate(-6deg)}
+.sub{color:var(--muted);font-size:.9rem;margin:6px 0 0}
+h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:0 0 10px;font-weight:600}
+section{display:flex;flex-direction:column}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+input[type=text],input[type=number]{font:inherit;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0;width:100%}
+input:focus-visible,button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+button{font:inherit;cursor:pointer;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:10px 14px;font-weight:600}
+button:disabled{opacity:.45;cursor:not-allowed}
+.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:800}
+.ghost{background:transparent}
+.row{display:flex;gap:8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:2px;border-radius:999px;border:1.5px solid var(--line);background:var(--bg);padding:0}
+.chip .pick{border:0;background:transparent;padding:7px 4px 7px 14px;border-radius:999px;font-weight:600}
+.chip .del{border:0;background:transparent;padding:7px 12px 7px 6px;color:var(--muted);font-weight:400}
+.chip.on{background:var(--teal);border-color:var(--teal)}
+.chip.on .pick,.chip.on .del{color:var(--bg)}
+.empty{color:var(--muted);font-size:.92rem;margin:0}
+.lineup{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.lineup li{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:var(--bg)}
+.lineup .n{font-family:var(--display);font-size:.9rem;color:var(--accent);width:1.6em}
+.lineup .nm{flex:1;min-width:0;overflow-wrap:anywhere;font-weight:600}
+.lineup button{padding:4px 10px;font-size:.85rem}
+.target{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.target input{width:100px}
+
+/* Tabellone */
+.board{display:flex;flex-direction:column;gap:10px}
+.pl{display:grid;grid-template-columns:1fr auto;grid-template-areas:"name total" "bar bar" "entry entry";gap:8px 12px;align-items:center;
+  background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.pl.lead{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold) inset}
+.pl .name{grid-area:name;font-weight:800;font-size:1.1rem;min-width:0;overflow-wrap:anywhere;display:flex;align-items:center;gap:8px}
+.rank{font-family:var(--display);font-weight:400;font-size:.95rem;color:var(--accent);min-width:1.6em}
+.rank:empty{display:none}
+.badge{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;font-weight:800;background:var(--gold);color:#2a1d00;padding:2px 7px;border-radius:999px}
+.pl .total{grid-area:total;font-family:var(--display);font-size:2rem;line-height:1;font-variant-numeric:tabular-nums}
+.pl .total small{font-family:var(--body);font-size:.8rem;color:var(--muted);font-weight:600;margin-left:2px}
+.bar{grid-area:bar;height:8px;border-radius:99px;background:var(--bg);overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%;background:var(--teal);border-radius:99px;transition:width .4s ease}
+.pl.lead .bar i{background:var(--accent)}
+.entry{grid-area:entry;display:flex;gap:6px;align-items:center}
+.entry input{flex:1;font-size:1.15rem;font-weight:800;font-variant-numeric:tabular-nums;text-align:center}
+.entry button{padding:9px 10px;font-size:.85rem;white-space:nowrap}
+.entry .bust.on{background:var(--bust);border-color:var(--bust);color:var(--ink)}
+.entry .f7.on{background:var(--gold);border-color:var(--gold);color:#2a1d00}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.actions .primary{flex:1 1 220px}
+.hint{color:var(--muted);font-size:.85rem;margin:0}
+.round-no{font-family:var(--display);font-size:.95rem;color:var(--accent)}
+
+.winner{background:var(--accent);color:var(--accent-ink);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:6px}
+.winner .t{font-size:.8rem;text-transform:uppercase;letter-spacing:.14em;font-weight:800;opacity:.85}
+.winner .w{font-family:var(--display);font-size:clamp(1.8rem,8vw,2.6rem);line-height:1.05;overflow-wrap:anywhere}
+.winner .s{font-weight:600}
+
+.hist{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:.92rem}
+th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left;color:var(--muted)}
+thead th{font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+tfoot td{font-weight:800;border-bottom:0;color:var(--ink)}
+td.z{color:var(--muted)}
+.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--surface);border:1.5px dashed var(--accent);border-radius:12px;padding:10px 12px}
+.confirm p{margin:0;flex:1 1 180px}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+(function(){
+const KEY='flip7-scorer-v1';
+const BONUS=15;
+let S={saved:[],selected:[],target:200,game:null};
+let ui={pending:{},confirm:null};
+
+function load(){try{const r=localStorage.getItem(KEY);if(r){const d=JSON.parse(r);S=Object.assign(S,d);}}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const totals=g=>g.players.map((_,i)=>g.rounds.reduce((a,r)=>a+(r[i]||0),0));
+
+function addPlayer(name){
+  name=name.trim().replace(/\s+/g,' ');
+  if(!name)return;
+  const ex=S.saved.find(n=>n.toLowerCase()===name.toLowerCase());
+  if(!ex)S.saved.push(name);
+  const nm=ex||name;
+  if(!S.selected.includes(nm))S.selected.push(nm);
+  save();render();
+  const f=document.getElementById('newname');if(f)f.focus();
+}
+function toggle(name){
+  const i=S.selected.indexOf(name);
+  if(i>=0)S.selected.splice(i,1);else S.selected.push(name);
+  save();render();
+}
+function forget(name){
+  S.saved=S.saved.filter(n=>n!==name);
+  S.selected=S.selected.filter(n=>n!==name);
+  save();render();
+}
+function move(i,d){const j=i+d;if(j<0||j>=S.selected.length)return;[S.selected[i],S.selected[j]]=[S.selected[j],S.selected[i]];save();render();}
+function start(){
+  if(S.selected.length<2)return;
+  const t=parseInt(S.target,10);
+  S.game={players:S.selected.slice(),rounds:[],target:t>0?t:200,over:false};
+  ui.pending={};save();render();
+}
+function blankPending(){const p={};S.game.players.forEach((_,i)=>p[i]={v:'',bust:false,f7:false});return p;}
+function rowScore(p){if(p.bust)return 0;const v=parseInt(p.v,10);return (isNaN(v)?0:Math.max(0,v))+(p.f7?BONUS:0);}
+function record(){
+  const g=S.game;const r=g.players.map((_,i)=>rowScore(ui.pending[i]));
+  g.rounds.push(r);
+  const t=totals(g);
+  if(t.some(x=>x>=g.target))g.over=true;
+  ui.pending=blankPending();save();render();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function undo(){const g=S.game;if(!g.rounds.length)return;g.rounds.pop();g.over=false;save();render();}
+function rematch(){S.selected=S.game.players.slice();S.game=null;start();}
+function quit(){S.game=null;ui.confirm=null;save();render();}
+
+function render(){
+  const app=document.getElementById('app');
+  app.innerHTML=S.game?gameView():setupView();
+  bind();
+}
+
+function head(sub){return `<header><div><h1>Flip <span class="seven">7</span></h1><p class="sub">${sub}</p></div></header>`;}
+
+function setupView(){
+  const savedChips=S.saved.length?`<div class="chips">${S.saved.map(n=>{
+    const on=S.selected.includes(n);
+    return `<span class="chip${on?' on':''}"><button class="pick" data-toggle="${esc(n)}" aria-pressed="${on}">${esc(n)}</button><button class="del" data-forget="${esc(n)}" aria-label="Elimina ${esc(n)} dai giocatori salvati">×</button></span>`;
+  }).join('')}</div>`:`<p class="empty">Nessun giocatore salvato. I nomi che scrivi qui sopra restano in memoria su questo dispositivo per le prossime partite.</p>`;
+  const lineup=S.selected.length?`<ol class="lineup">${S.selected.map((n,i)=>`<li><span class="n">${i+1}</span><span class="nm">${esc(n)}</span><button data-up="${i}" aria-label="Sposta su" ${i===0?'disabled':''}>↑</button><button data-down="${i}" aria-label="Sposta giù" ${i===S.selected.length-1?'disabled':''}>↓</button><button data-toggle="${esc(n)}" aria-label="Togli ${esc(n)}">Togli</button></li>`).join('')}</ol>`:`<p class="empty">Aggiungi almeno due giocatori per iniziare.</p>`;
+  return head('Segnapunti: si vince superando la soglia')+`
+  <section class="panel"><h2>Nuovo giocatore</h2>
+    <form class="row" id="addform"><input type="text" id="newname" placeholder="Nome del giocatore" autocomplete="off" maxlength="24"><button class="primary" type="submit">Aggiungi</button></form>
+  </section>
+  <section><h2>Giocatori salvati</h2>${savedChips}</section>
+  <section class="panel"><h2>Al tavolo (${S.selected.length})</h2>${lineup}</section>
+  <section class="target"><label for="target"><strong>Soglia di vittoria</strong></label><input type="number" id="target" min="1" inputmode="numeric" value="${esc(S.target)}"><span class="hint">punti</span></section>
+  <button class="primary" id="start" ${S.selected.length<2?'disabled':''}>Inizia la partita</button>`;
+}
+
+function gameView(){
+  const g=S.game;const t=totals(g);const max=Math.max(...t);
+  if(!ui.pending||Object.keys(ui.pending).length!==g.players.length)ui.pending=blankPending();
+  let top='';
+  if(g.over){
+    const winners=g.players.filter((_,i)=>t[i]===max);
+    top=`<div class="winner" role="status"><span class="t">${winners.length>1?'Pareggio':'Vince'} dopo ${g.rounds.length} manche</span><span class="w">${winners.map(esc).join(' & ')}</span><span class="s">${max} punti</span></div>
+      <div class="actions"><button class="primary" id="rematch">Rivincita, stessi giocatori</button><button id="undo">Annulla ultima manche</button><button class="ghost" id="newgame">Nuova partita</button></div>`;
+  }
+  const order=g.players.map((_,i)=>i).sort((a,b)=>t[b]-t[a]||a-b);
+  const board=order.map((i,pos)=>{
+    const n=g.players[i];const rank=t.filter(x=>x>t[i]).length+1;
+    const p=ui.pending[i];const lead=g.rounds.length&&t[i]===max&&max>0;
+    const pct=Math.min(100,t[i]/g.target*100);
+    const entry=g.over?'':`<div class="entry">
+        <input type="number" inputmode="numeric" min="0" id="sc-${pos}" data-pos="${pos}" data-score="${i}" placeholder="0" value="${esc(p.v)}" ${p.bust?'disabled':''} aria-label="Punti di ${esc(n)} in questa manche">
+        <button class="bust${p.bust?' on':''}" data-bust="${i}" aria-pressed="${p.bust}">Sballato</button>
+        <button class="f7${p.f7?' on':''}" data-f7="${i}" aria-pressed="${p.f7}" ${p.bust?'disabled':''}>Flip 7 +${BONUS}</button>
+      </div>`;
+    return `<div class="pl${lead?' lead':''}"><div class="name"><span class="rank">${g.rounds.length?rank+'°':''}</span>${esc(n)}${lead&&!g.over?'<span class="badge">In testa</span>':''}</div>
+      <div class="total">${t[i]}<small>/${g.target}</small></div>
+      <div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>${entry}</div>`;
+  }).join('');
+  const entryActions=g.over?'':`<div class="actions"><button class="primary" id="record">Registra manche ${g.rounds.length+1}</button>${g.rounds.length?'<button id="undo">Annulla ultima</button>':''}</div>
+    <p class="hint">Campo vuoto vale 0. “Sballato” azzera la manche del giocatore; “Flip 7” aggiunge il bonus di ${BONUS} punti alla somma delle carte.</p>`;
+  const hist=g.rounds.length?`<section><h2>Manche giocate</h2><div class="hist"><table><thead><tr><th>Manche</th>${g.players.map(n=>`<th>${esc(n)}</th>`).join('')}</tr></thead>
+    <tbody>${g.rounds.map((r,k)=>`<tr><td>${k+1}</td>${r.map(v=>`<td class="${v===0?'z':''}">${v}</td>`).join('')}</tr>`).join('')}</tbody>
+    <tfoot><tr><td>Totale</td>${t.map(v=>`<td>${v}</td>`).join('')}</tr></tfoot></table></div></section>`:'';
+  const conf=ui.confirm==='quit'?`<div class="confirm"><p>Abbandonare la partita in corso? I punti andranno persi.</p><button class="primary" id="quityes">Abbandona</button><button id="quitno">Continua a giocare</button></div>`:
+    (!g.over?`<div class="actions"><button class="ghost" id="quit">Abbandona partita</button></div>`:'');
+  return head(g.over?'Partita conclusa':`<span class="round-no">Manche ${g.rounds.length+1}</span> · si chiude a ${g.target} punti`)+top+`<section class="board">${board}</section>`+entryActions+hist+conf;
+}
+
+function bind(){
+  const $=id=>document.getElementById(id);
+  const on=(id,f)=>{const e=$(id);if(e)e.addEventListener('click',f);};
+  const af=$('addform');if(af)af.addEventListener('submit',e=>{e.preventDefault();addPlayer($('newname').value);});
+  document.querySelectorAll('[data-toggle]').forEach(b=>b.addEventListener('click',()=>toggle(b.dataset.toggle)));
+  document.querySelectorAll('[data-forget]').forEach(b=>b.addEventListener('click',()=>forget(b.dataset.forget)));
+  document.querySelectorAll('[data-up]').forEach(b=>b.addEventListener('click',()=>move(+b.dataset.up,-1)));
+  document.querySelectorAll('[data-down]').forEach(b=>b.addEventListener('click',()=>move(+b.dataset.down,1)));
+  const tg=$('target');if(tg)tg.addEventListener('input',()=>{S.target=tg.value;save();});
+  on('start',start);on('record',record);on('undo',undo);on('rematch',rematch);
+  on('newgame',()=>{S.selected=S.game.players.slice();quit();});
+  on('quit',()=>{ui.confirm='quit';render();});on('quityes',quit);on('quitno',()=>{ui.confirm=null;render();});
+  document.querySelectorAll('[data-score]').forEach(inp=>{
+    inp.addEventListener('input',()=>{ui.pending[inp.dataset.score].v=inp.value;});
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const nx=$('sc-'+(+inp.dataset.pos+1));if(nx)nx.focus();else record();}});
+  });
+  document.querySelectorAll('[data-bust]').forEach(b=>b.addEventListener('click',()=>{const p=ui.pending[b.dataset.bust];p.bust=!p.bust;if(p.bust){p.f7=false;}render();}));
+  document.querySelectorAll('[data-f7]').forEach(b=>b.addEventListener('click',()=>{const p=ui.pending[b.dataset.f7];p.f7=!p.f7;render();}));
+}
+
+load();render();
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}
+})();
+</script>
+</body>
+</html>
